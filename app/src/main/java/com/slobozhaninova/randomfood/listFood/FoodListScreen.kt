@@ -3,75 +3,107 @@ package com.slobozhaninova.randomfood.listFood
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-data class FoodData(
-    val food: String,
-    val category : String
-)
-
-val tabTitles = listOf("Все", "Супы", "Салаты", "Гарниры", "Основные блюда", "Десерты")
-
-@Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodListScreen(
-    foodData: FoodData = FoodData("котлета", category = "основное блюдо")
+    listState: FoodListState,
+    onBack: () -> Unit,
+    onAddFoodClick: () -> Unit,
+    query : (String) -> Unit,
+    selectedCategory : (String) -> Unit,
+    deleteFood : (FoodVM) -> Unit
 ) {
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Список блюд") }
+                title = { Text("Список блюд") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onAddFoodClick) {
+                        Icon(Icons.Default.Add, contentDescription = "Добавить")
+                    }
+                }
             )
         }
-    ) {
-        Column(modifier = Modifier.padding(it))
-        {
-            var selectedIndex by remember { mutableIntStateOf(0) }
-            ScrollableTabRow(selectedTabIndex = selectedIndex) {
-                tabTitles.forEachIndexed { index, title ->
+    ) { paddingValues ->
+        Column(modifier = Modifier.padding(paddingValues)) {
+            OutlinedTextField(
+                value = listState.searchQuery,
+                onValueChange = { query(it) },
+                label = { Text("Поиск блюд") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                trailingIcon = {
+                    if (listState.searchQuery.isNotBlank()) {
+                        IconButton(onClick = { query("") }) {
+                            Icon(Icons.Default.Close, contentDescription = "Очистить")
+                        }
+                    }
+                }
+            )
+
+            ScrollableTabRow(
+                selectedTabIndex = allCategory.indexOf(listState.selectedCategory).coerceAtLeast(0)
+            ) {
+                allCategory.forEachIndexed { index, title ->
                     Tab(
-                        selected = selectedIndex == index,
-                        onClick = { selectedIndex = index },
+                        selected = listState.selectedCategory == title,
+                        onClick = { selectedCategory(title) },
                         text = { Text(title) }
                     )
                 }
             }
+            LazyColumn {
+                items(listState.filteredFoods) { food ->
+                    FoodItem(
+                        foodVM = food,
+                        onDelete = { deleteFood(food) }
+                    )
+                }
 
-            when (selectedIndex) {
-                0 -> Text("Содержимое вкладки 1")
-                1 -> Text("Содержимое вкладки 2")
-                2 -> Text("Содержимое вкладки 3")
-                3 -> Text("Содержимое вкладки 4")
-                4 -> Text("Содержимое вкладки 5")
-                5 -> Text("Содержимое вкладки 6")
+                if (listState.filteredFoods.isEmpty()) {
+                    item {
+                        Text(
+                            text = if (listState.searchQuery.isNotBlank()) {
+                                "Ничего не найдено"
+                            } else {
+                                "Нет блюд в этой категории"
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp)
+                                .wrapContentWidth(Alignment.Companion.CenterHorizontally),
+                        )
+                    }
+                }
             }
         }
     }
-    }
-
-    @Preview
-    @Composable
-    fun FoodItem(
-        foodData: FoodData = FoodData("котлета", "основное блюдо")
-    ) {
-        Text(
-            text = foodData.food,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp, horizontal = 16.dp)
-        )
-    }
+}

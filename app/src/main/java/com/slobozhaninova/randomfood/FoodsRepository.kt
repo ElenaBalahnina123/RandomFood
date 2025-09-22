@@ -7,6 +7,8 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
+
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -25,7 +27,7 @@ interface FoodsRepository {
     suspend fun deleteFood(food: FoodDBEntity)
 }
 
-class FoodsRepositoryImpl(
+class FoodsRepositoryImpl @Inject constructor(
     private val foodDao: FoodDao
 ) : FoodsRepository {
     override fun getAllFoods(): Flow<List<FoodDBEntity>> = foodDao.getAllFoods()
