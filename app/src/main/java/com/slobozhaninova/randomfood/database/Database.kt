@@ -12,9 +12,10 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 
-@Database(entities = [FoodDBEntity::class], version = 1)
+@Database(entities = [FoodDBEntity::class, CategoryDBEntity::class], version = 4)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun foodDao(): FoodDao
+    abstract fun categoryDao() : CategoryDao
 }
 
 @InstallIn(SingletonComponent::class)
@@ -28,12 +29,18 @@ class DatabaseModule {
             context,
             AppDatabase::class.java,
             "food_database")
+            .fallbackToDestructiveMigration()
             .build()
 
     }
     @Provides
     fun provideFoodsDao(db: AppDatabase): FoodDao {
         return db.foodDao()
+    }
+
+    @Provides
+    fun provideCategoryDao(db: AppDatabase): CategoryDao {
+        return db.categoryDao()
     }
 
 }

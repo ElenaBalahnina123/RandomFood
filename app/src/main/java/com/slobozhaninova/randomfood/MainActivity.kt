@@ -11,6 +11,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.slobozhaninova.randomfood.addCategory.AddCategoryScreen
+import com.slobozhaninova.randomfood.addCategory.AddCategoryViewModel
 import com.slobozhaninova.randomfood.addFood.AddFoodScreen
 import com.slobozhaninova.randomfood.addFood.AddFoodViewModel
 import com.slobozhaninova.randomfood.listFood.FoodListScreen
@@ -56,27 +58,44 @@ fun navigationContent() {
         composable("list") {
             val viewModel = hiltViewModel<FoodListViewModel>()
             val listState by viewModel.listState.collectAsState()
+            val categories by viewModel.stateCategory.collectAsState()
+
             FoodListScreen(
                 listState = listState,
                 onBack = { navController.navigate("randomFood") },
                 onAddFoodClick = { navController.navigate("add") },
                 query = viewModel::query,
                 selectedCategory = viewModel::selectedCategory,
-                deleteFood = viewModel::deleteFood
+                deleteFood = viewModel::deleteFood,
+                onAddCategory = {navController.navigate("addCategories")},
+                allCategory = categories
             )
         }
         composable("add") {
             val viewModel = hiltViewModel<AddFoodViewModel>()
             val addFoodState by viewModel.addFoodState.collectAsState()
+            val category by viewModel.stateCategory.collectAsState()
             AddFoodScreen(
                 addFoodState = addFoodState,
-                onBack = { navController.navigate("list") },
-                setAddFoodName = viewModel::setAddFoodName,
-                setAddFoodCategory = viewModel::setAddFoodCategory,
+                onBack = { navController.popBackStack() },
+                addFoodName = viewModel::addFoodName,
+                addFoodCategory = viewModel::addFoodCategory,
                 onAddClick = {
                     viewModel.addFood()
                     navController.navigate("list")
-                }
+                },
+                categoryVM = category
+            )
+        }
+        composable("addCategories") {
+            val viewModel = hiltViewModel<AddCategoryViewModel>()
+            val categoriesList by viewModel.stateCategory.collectAsState()
+            AddCategoryScreen(
+                onBackClick = {navController.navigate("list")},
+                categoriesList = categoriesList,
+                onDeleteClick = viewModel::deleteCategory,
+                addCategory = viewModel::addCategory,
+                canDeleteCategory = viewModel::canDeleteCategory
             )
         }
     }

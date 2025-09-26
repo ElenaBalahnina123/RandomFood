@@ -3,14 +3,15 @@ package com.slobozhaninova.randomfood.addFood
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.slobozhaninova.randomfood.FoodsRepository
+import com.slobozhaninova.randomfood.addCategory.CategoryVM
+import com.slobozhaninova.randomfood.database.CategoryDBEntity
 import com.slobozhaninova.randomfood.database.FoodDBEntity
-import com.slobozhaninova.randomfood.listFood.allCategory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.text.category
 
 data class AddFoodState(
     val name: String = "",
@@ -25,31 +26,52 @@ class AddFoodViewModel @Inject constructor(
     private val _addFoodState = MutableStateFlow(AddFoodState())
     val addFoodState = _addFoodState.asStateFlow()
 
-    fun setAddFoodName(name: String) {
+    val mutableStateCategory = MutableStateFlow<List<CategoryVM>>(emptyList())
+    val stateCategory = mutableStateCategory.asStateFlow()
+
+
+    init {
+        loadCategories()
+    }
+
+    private fun loadCategories() {
+        viewModelScope.launch {
+            repository.getAllCategories().collect { categories ->
+                mutableStateCategory.value = categories.map { toCategoryVM(it) }
+            }
+            if (mutableStateCategory.value.isEmpty()) {
+                repository.initializeDefaultCategories()
+            }
+        }
+    }
+
+    fun toCategoryVM(entity: CategoryDBEntity): CategoryVM {
+        return CategoryVM(
+            categoryName = entity.categoryName,
+            addByUser = entity.addByUser
+        )
+    }
+
+    fun addFoodName(name: String) {
         _addFoodState.value = _addFoodState.value.copy(
             name = name
         )
     }
-
-    fun setAddFoodCategory(category: String) {
+    fun addFoodCategory(category: String) {
         _addFoodState.value = _addFoodState.value.copy(
             category = category
         )
     }
 
     fun addFood() {
-        val state = _addFoodState.value
-        val name = state.name.trim()
-        val category = state.category.trim()
-
         viewModelScope.launch {
-            repository.insertFood(FoodDBEntity(name = name, category = category))
-            _addFoodState.value = AddFoodState(
-                name = "",
-                category = allCategory.first()
+            repository.insertFood(
+                FoodDBEntity(
+                    name = _addFoodState.value.name,
+                    category = _addFoodState.value.category
+                )
             )
         }
     }
-
 
 }

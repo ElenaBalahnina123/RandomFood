@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.slobozhaninova.randomfood.addCategory.CategoryVM
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,8 +33,10 @@ fun FoodListScreen(
     onBack: () -> Unit,
     onAddFoodClick: () -> Unit,
     query : (String) -> Unit,
-    selectedCategory : (String) -> Unit,
-    deleteFood : (FoodVM) -> Unit
+    selectedCategory : (CategoryVM) -> Unit,
+    deleteFood : (FoodVM) -> Unit,
+    onAddCategory : () -> Unit,
+    allCategory : List<CategoryVM>
 ) {
 
     Scaffold(
@@ -41,12 +45,15 @@ fun FoodListScreen(
                 title = { Text("Список блюд") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                        Icon(Icons.Default.ArrowBack, contentDescription = null)
                     }
                 },
                 actions = {
                     IconButton(onClick = onAddFoodClick) {
-                        Icon(Icons.Default.Add, contentDescription = "Добавить")
+                        Icon(Icons.Default.Create, contentDescription = null)
+                    }
+                    IconButton(onClick = onAddCategory) {
+                        Icon(Icons.Default.Add, contentDescription = null)
                     }
                 }
             )
@@ -63,21 +70,24 @@ fun FoodListScreen(
                 trailingIcon = {
                     if (listState.searchQuery.isNotBlank()) {
                         IconButton(onClick = { query("") }) {
-                            Icon(Icons.Default.Close, contentDescription = "Очистить")
+                            Icon(Icons.Default.Close, contentDescription = null)
                         }
                     }
                 }
             )
 
-            ScrollableTabRow(
-                selectedTabIndex = allCategory.indexOf(listState.selectedCategory).coerceAtLeast(0)
-            ) {
-                allCategory.forEachIndexed { index, title ->
-                    Tab(
-                        selected = listState.selectedCategory == title,
-                        onClick = { selectedCategory(title) },
-                        text = { Text(title) }
-                    )
+            if (allCategory.isNotEmpty()) {
+                val selectedIndex = allCategory.indexOfFirst {it.categoryName == listState.selectedCategory.categoryName }
+                    .coerceAtLeast(0)
+
+                ScrollableTabRow(selectedTabIndex = selectedIndex) {
+                    allCategory.forEach { category ->
+                        Tab(
+                            selected = listState.selectedCategory.categoryName == category.categoryName,
+                            onClick = { selectedCategory(category) },
+                            text = { Text(category.categoryName) }
+                        )
+                    }
                 }
             }
             LazyColumn {
@@ -93,13 +103,15 @@ fun FoodListScreen(
                         Text(
                             text = if (listState.searchQuery.isNotBlank()) {
                                 "Ничего не найдено"
+                            } else if (allCategory.isEmpty()) {
+                                "Нет категорий"
                             } else {
                                 "Нет блюд в этой категории"
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(32.dp)
-                                .wrapContentWidth(Alignment.Companion.CenterHorizontally),
+                                .wrapContentWidth(Alignment.CenterHorizontally),
                         )
                     }
                 }

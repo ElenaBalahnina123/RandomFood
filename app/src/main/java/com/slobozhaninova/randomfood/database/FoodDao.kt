@@ -11,13 +11,6 @@ interface FoodDao {
 
     @Query("SELECT * FROM foods")
     fun getAllFoods(): Flow<List<FoodDBEntity>>
-
-    @Query("SELECT * FROM foods WHERE category = :category")
-    fun getFoodByCategory(category: String): Flow<List<FoodDBEntity>>
-
-    @Query("SELECT DISTINCT category FROM foods")
-    fun getCategories(): Flow<List<String>>
-
     @Insert
     suspend fun insert(foodDBEntity: FoodDBEntity)
 
