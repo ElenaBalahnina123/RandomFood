@@ -18,6 +18,7 @@ import com.slobozhaninova.randomfood.addFood.AddFoodViewModel
 import com.slobozhaninova.randomfood.listFood.FoodListScreen
 import com.slobozhaninova.randomfood.listFood.FoodListViewModel
 import com.slobozhaninova.randomfood.randomFood.RandomFoodScreen
+import com.slobozhaninova.randomfood.randomFood.RandomViewModel
 import com.slobozhaninova.randomfood.ui.theme.RandomFoodTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -44,22 +45,19 @@ fun navigationContent() {
         startDestination = "randomFood",
     ) {
         composable("randomFood") {
-            val viewModel = hiltViewModel<FoodListViewModel>()
-            val randomFood by viewModel.randomFood.collectAsState()
-            val allFoods by viewModel.allFood.collectAsState()
+            val viewModel = hiltViewModel<RandomViewModel>()
+
             RandomFoodScreen(
-                randomFood = randomFood,
-                allFoods = allFoods,
-                onClickRandomFood = viewModel::generateRandomFood,
                 onEditFoodClick = { navController.navigate("list") },
-                onAddFoodClick = { navController.navigate("add") }
+                onAddFoodClick = { navController.navigate("add") },
+                randomViewModel = viewModel
+
             )
         }
         composable("list") {
             val viewModel = hiltViewModel<FoodListViewModel>()
             val listState by viewModel.listState.collectAsState()
-            val categories by viewModel.stateCategory.collectAsState()
-
+            val category by viewModel.categoriesWithAll.collectAsState()
             FoodListScreen(
                 listState = listState,
                 onBack = { navController.navigate("randomFood") },
@@ -68,7 +66,7 @@ fun navigationContent() {
                 selectedCategory = viewModel::selectedCategory,
                 deleteFood = viewModel::deleteFood,
                 onAddCategory = {navController.navigate("addCategories")},
-                allCategory = categories
+                allCategory = category
             )
         }
         composable("add") {

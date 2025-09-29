@@ -1,34 +1,32 @@
 package com.slobozhaninova.randomfood.listFood
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.slobozhaninova.randomfood.CategoryVM
+import com.slobozhaninova.randomfood.CategoryViewModel
+import com.slobozhaninova.randomfood.FoodVM
 import com.slobozhaninova.randomfood.FoodsRepository
-import com.slobozhaninova.randomfood.addCategory.CategoryVM
 import com.slobozhaninova.randomfood.database.CategoryDBEntity
 import com.slobozhaninova.randomfood.database.FoodDBEntity
+import com.slobozhaninova.randomfood.toEntityFood
+import com.slobozhaninova.randomfood.toFoodVM
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
-data class FoodVM(
-    val id: Long = 0L,
-    val name: String,
-    val category: String
-)
 
 @HiltViewModel
 class FoodListViewModel @Inject constructor(
     private val repository: FoodsRepository
 ) : ViewModel() {
 
-    val mutableStateCategory = MutableStateFlow<List<CategoryVM>>(emptyList())
-    val stateCategory = mutableStateCategory.asStateFlow()
+    private val categoryHandler = CategoryViewModel(repository)
 
     val mutableState = MutableStateFlow<List<FoodVM>>(emptyList())
     val allFood: StateFlow<List<FoodVM>> = mutableState.asStateFlow()
@@ -38,23 +36,8 @@ class FoodListViewModel @Inject constructor(
 
     init {
         loadAllFoods()
-        loadCategories()
+        categoryHandler.loadCategories()
 
-    }
-
-    private fun loadCategories() {
-        viewModelScope.launch {
-            repository.getAllCategories().collect { categories ->
-                val categoriesWithAll = listOf(CategoryVM(categoryName = "Все", addByUser = false)) + categories.map { toCategoryVM(it) }
-                mutableStateCategory.value = categoriesWithAll
-                if (mutableStateCategory.value.isNotEmpty() && _listState.value.selectedCategory.categoryName.isEmpty()) {
-                    _listState.value = _listState.value.copy(
-                        selectedCategory = mutableStateCategory.value.first()
-                    )
-                    updateListState()
-                }
-            }
-        }
     }
 
     private fun loadAllFoods() {
@@ -97,7 +80,7 @@ class FoodListViewModel @Inject constructor(
 
     fun deleteFood(food: FoodVM) {
         viewModelScope.launch {
-            repository.deleteFood(toEntity(foodVm = FoodVM(food.id, food.name, food.category)))
+            repository.deleteFood(toEntityFood(foodVm = FoodVM(food.id, food.name, food.category)))
         }
     }
 
@@ -121,30 +104,16 @@ class FoodListViewModel @Inject constructor(
         _listState.value = _listState.value.copy(filteredFoods = filtered)
     }
 
-}
-fun toEntity(foodVm: FoodVM): FoodDBEntity {
-    return FoodDBEntity(
-        id = foodVm.id,
-        name = foodVm.name,
-        category = foodVm.category
-    )
-}
+    val categoriesWithAll: StateFlow<List<CategoryVM>> =
+        categoryHandler.stateCategory.map { categories ->
+            listOf(CategoryVM(categoryName = "Все", addByUser = false)) + categories
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyList()
+        )
 
-fun toFoodVM(entity: FoodDBEntity): FoodVM {
-    return FoodVM(
-        id = entity.id,
-        name = entity.name,
-        category = entity.category
-    )
 }
-
-private fun toCategoryVM(entity: CategoryDBEntity): CategoryVM {
-    return CategoryVM(
-        categoryName = entity.categoryName,
-        addByUser = entity.addByUser
-    )
-}
-
 
 data class FoodListState(
     val selectedCategory: CategoryVM = CategoryVM(categoryName = "Все", addByUser = false),
