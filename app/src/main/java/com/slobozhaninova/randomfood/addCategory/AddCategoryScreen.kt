@@ -1,5 +1,6 @@
 package com.slobozhaninova.randomfood.addCategory
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -24,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.slobozhaninova.randomfood.CategoryVM
 
@@ -33,15 +35,15 @@ import com.slobozhaninova.randomfood.CategoryVM
 @Composable
 fun AddCategoryScreen(
     onBackClick: () -> Unit = {},
-    categoriesList: List<CategoryVM> = listOf(CategoryVM("гарнир"),CategoryVM("Супы")),
-    onDeleteClick : (CategoryVM) -> Unit = {},
-    addCategory : (String) -> Unit = {""},
-    canDeleteCategory : (CategoryVM) -> Boolean = {true}
+    categoriesList: List<CategoryVM> = listOf(CategoryVM("гарнир"), CategoryVM("Супы")),
+    onDeleteClick: (CategoryVM) -> Unit = {},
+    addCategory: (String) -> Unit = { "" },
+    canDeleteCategory: (CategoryVM) -> Boolean = { true }
 ) {
 
     var showAlertDialog by remember { mutableStateOf(false) }
     var newCategoryName by remember { mutableStateOf("") }
-
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -52,14 +54,16 @@ fun AddCategoryScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {showAlertDialog=true}) {
+                    IconButton(onClick = { showAlertDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = null)
                     }
                 }
             )
         }
     ) {
-        Column(modifier = Modifier.padding(it).fillMaxWidth()) {
+        Column(modifier = Modifier
+            .padding(it)
+            .fillMaxWidth()) {
             LazyColumn {
                 items(categoriesList) { category ->
                     CategoryItem(
@@ -89,15 +93,18 @@ fun AddCategoryScreen(
                             val trimmedName = newCategoryName.trim()
                             when {
                                 trimmedName.isBlank() -> {
-
+                                    Toast.makeText(context, "Категория пустая", Toast.LENGTH_SHORT).show()
                                 }
+
                                 categoriesList.any { it.categoryName.equals(trimmedName, ignoreCase = true) } -> {
-
+                                    Toast.makeText(context, "Категория уже существует", Toast.LENGTH_SHORT).show()
                                 }
+
                                 else -> {
                                     addCategory(trimmedName)
                                     newCategoryName = ""
                                     showAlertDialog = false
+                                    Toast.makeText(context, "Категория добавлена", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }
@@ -107,8 +114,10 @@ fun AddCategoryScreen(
                 },
                 dismissButton = {
                     TextButton(
-                        onClick = { showAlertDialog = false
-                            newCategoryName = ""}) {
+                        onClick = {
+                            showAlertDialog = false
+                            newCategoryName = ""
+                        }) {
                         Text("Отмена")
                     }
                 }

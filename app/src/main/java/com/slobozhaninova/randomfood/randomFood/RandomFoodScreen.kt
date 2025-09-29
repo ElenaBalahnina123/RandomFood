@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,91 +26,88 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.slobozhaninova.randomfood.FoodVM
+import com.slobozhaninova.randomfood.ui.theme.RandomFoodTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Preview
 @Composable
 fun RandomFoodScreen(
-    randomViewModel: RandomViewModel,
-    onEditFoodClick: () -> Unit,
-    onAddFoodClick: () -> Unit
+    onEditFoodClick: () -> Unit = {},
+    onAddFoodClick: () -> Unit = {},
+    randomFood : FoodVM? = FoodVM(0L, "пюре с аоаоаоаоаоао аоаоао", "гарниры"),
+    allFoods : List<FoodVM> = listOf(FoodVM(0L, "пюре", "гарниры"),FoodVM(0L, "пюре", "гарниры")),
+    generateRandomFood : () -> Unit = {}
 ) {
-    val randomFood by randomViewModel.randomFood.collectAsState()
-    val allFoods by randomViewModel.allFoods.collectAsState()
-    val isLoading by randomViewModel.isLoading.collectAsState()
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Рандомайзер блюд") },
-                actions = {
-                    IconButton(onClick = onAddFoodClick) {
-                        Icon(Icons.Default.Add, contentDescription = "Добавить блюдо")
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Рандомайзер блюд") },
+                    actions = {
+                        IconButton(onClick = onAddFoodClick) {
+                            Icon(Icons.Default.Add, contentDescription = "Добавить блюдо")
+                        }
                     }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Button(
-                onClick = onEditFoodClick,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Редактировать список блюд")
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            if (isLoading) {
-                CircularProgressIndicator()
-            } else if (randomFood != null) {
-                Column(
-                    modifier = Modifier
-                        .padding(24.dp)
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = randomFood!!.name,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = randomFood!!.category
-                    )
-                }
-            } else {
-                Text(
-                    text = "Нет блюд для выбора",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(vertical = 32.dp)
                 )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = { randomViewModel.generateRandomFood() },
+        ) { paddingValues ->
+            Column(
                 modifier = Modifier
-                    .size(150.dp)
-                    .clip(CircleShape),
-                enabled = allFoods.isNotEmpty() && !isLoading
+                    .padding(paddingValues)
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Заново", textAlign = TextAlign.Center)
-            }
 
-            if (allFoods.isEmpty() && !isLoading) {
-                Text(
-                    text = "Добавьте блюда",
-                    modifier = Modifier.padding(top = 16.dp)
-                )
+                Button(
+                    onClick = onEditFoodClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Редактировать список блюд")
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                if (randomFood != null) {
+                        Text(
+                            text = randomFood.name,
+                            fontSize = 30.sp,
+                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                else {
+                    Text(
+                        text = "...",
+                        fontSize = 30.sp,
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = generateRandomFood,
+                    modifier = Modifier
+                        .size(180.dp)
+                        .clip(CircleShape),
+                    enabled = allFoods.isNotEmpty()
+                ) {
+                    Text("Заново", textAlign = TextAlign.Center,
+                        fontSize = 20.sp)
+                }
+
+                if (allFoods.isEmpty()) {
+                    Text(
+                        text = "Добавьте блюда",
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+                }
             }
         }
     }
-}

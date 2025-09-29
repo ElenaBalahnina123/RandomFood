@@ -47,10 +47,15 @@ fun navigationContent() {
         composable("randomFood") {
             val viewModel = hiltViewModel<RandomViewModel>()
 
+            val randomFood by viewModel.randomFood.collectAsState()
+            val allFoods by viewModel.allFoods.collectAsState()
+
             RandomFoodScreen(
                 onEditFoodClick = { navController.navigate("list") },
                 onAddFoodClick = { navController.navigate("add") },
-                randomViewModel = viewModel
+                randomFood = randomFood,
+                allFoods = allFoods,
+                generateRandomFood = viewModel::generateRandomFood
 
             )
         }
@@ -97,6 +102,5 @@ fun navigationContent() {
             )
         }
     }
-
 
 }

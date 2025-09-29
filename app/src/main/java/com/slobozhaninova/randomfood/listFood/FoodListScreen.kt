@@ -1,5 +1,6 @@
 package com.slobozhaninova.randomfood.listFood
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -7,10 +8,13 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Create
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -21,6 +25,10 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -46,16 +54,14 @@ fun FoodListScreen(
                 title = { Text("Список блюд") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 },
                 actions = {
-                    IconButton(onClick = onAddFoodClick) {
-                        Icon(Icons.Default.Create, contentDescription = null)
-                    }
-                    IconButton(onClick = onAddCategory) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                    }
+                   MinimalDropdownMenu(
+                       addFood = onAddFoodClick,
+                       addCategory = onAddCategory
+                   )
                 }
             )
         }
@@ -117,6 +123,36 @@ fun FoodListScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+
+@Composable
+fun MinimalDropdownMenu(
+    addFood : () -> Unit,
+    addCategory : () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box(
+        modifier = Modifier
+            .padding(16.dp)
+    ) {
+        IconButton(onClick = { expanded = !expanded }) {
+            Icon(Icons.Default.Add, contentDescription = null)
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Добавить блюдо") },
+                onClick = addFood
+            )
+            DropdownMenuItem(
+                text = { Text("Добавить категорию") },
+                onClick = addCategory
+            )
         }
     }
 }
