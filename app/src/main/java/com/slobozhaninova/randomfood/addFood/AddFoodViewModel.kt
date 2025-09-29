@@ -2,8 +2,8 @@ package com.slobozhaninova.randomfood.addFood
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.slobozhaninova.randomfood.CategoryUtils
 import com.slobozhaninova.randomfood.CategoryVM
-import com.slobozhaninova.randomfood.CategoryViewModel
 import com.slobozhaninova.randomfood.FoodsRepository
 import com.slobozhaninova.randomfood.database.FoodDBEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,14 +23,18 @@ class AddFoodViewModel @Inject constructor(
     private val repository: FoodsRepository
 ) : ViewModel() {
 
-    private val categoryHandler = CategoryViewModel(repository)
+    private val _stateCategory = MutableStateFlow<List<CategoryVM>>(emptyList())
+    val stateCategory: StateFlow<List<CategoryVM>> = _stateCategory.asStateFlow()
 
     init {
-        categoryHandler.loadCategories()
+        loadCategories()
     }
 
-    val stateCategory: StateFlow<List<CategoryVM>> = categoryHandler.stateCategory
-
+    private fun loadCategories() {
+        CategoryUtils.loadCategories(repository, viewModelScope) { categories ->
+            _stateCategory.value = categories
+        }
+    }
     private val _addFoodState = MutableStateFlow(AddFoodState())
     val addFoodState = _addFoodState.asStateFlow()
 

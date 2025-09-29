@@ -3,13 +3,15 @@ package com.slobozhaninova.randomfood.addCategory
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.slobozhaninova.randomfood.CategoryUtils
 import com.slobozhaninova.randomfood.CategoryVM
-import com.slobozhaninova.randomfood.CategoryViewModel
 import com.slobozhaninova.randomfood.FoodsRepository
 import com.slobozhaninova.randomfood.database.CategoryDBEntity
 import com.slobozhaninova.randomfood.toEntityCategory
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,16 +20,18 @@ import javax.inject.Inject
 class AddCategoryViewModel @Inject constructor(
     private val repository: FoodsRepository
 ) : ViewModel() {
-
-
-    private val categoryHandler = CategoryViewModel(repository)
+    private val _stateCategory = MutableStateFlow<List<CategoryVM>>(emptyList())
+    val stateCategory: StateFlow<List<CategoryVM>> = _stateCategory.asStateFlow()
 
     init {
-        categoryHandler.loadCategories()
+        loadCategories()
     }
 
-    val stateCategory: StateFlow<List<CategoryVM>> = categoryHandler.stateCategory
-
+    private fun loadCategories() {
+        CategoryUtils.loadCategories(repository, viewModelScope) { categories ->
+            _stateCategory.value = categories
+        }
+    }
 
     fun addCategory(categoryName: String) {
         viewModelScope.launch {

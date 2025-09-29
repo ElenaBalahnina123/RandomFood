@@ -62,8 +62,10 @@ fun navigationContent() {
         composable("list") {
             val viewModel = hiltViewModel<FoodListViewModel>()
             val listState by viewModel.listState.collectAsState()
-            val category by viewModel.categoriesWithAll.collectAsState()
+            val category by viewModel.stateCategory.collectAsState()
+            val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
             FoodListScreen(
+                selectedTabIndex = selectedTabIndex,
                 listState = listState,
                 onBack = { navController.navigate("randomFood") },
                 onAddFoodClick = { navController.navigate("add") },
@@ -80,7 +82,7 @@ fun navigationContent() {
             val category by viewModel.stateCategory.collectAsState()
             AddFoodScreen(
                 addFoodState = addFoodState,
-                onBack = { navController.popBackStack() },
+                onBack = { navController.navigate("randomFood") },
                 addFoodName = viewModel::addFoodName,
                 addFoodCategory = viewModel::addFoodCategory,
                 onAddClick = {
